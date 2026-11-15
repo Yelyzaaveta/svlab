@@ -1,0 +1,25 @@
+{
+  "name": "svlab",
+  "version": "1.0.0",
+  "description": "М'яке видалення.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yelyzaaveta/svlab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Yelyzaaveta/svlab/issues"
+  },
+  "homepage": "https://github.com/Yelyzaaveta/svlab#readme",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1169.0",
+    "@aws-sdk/lib-dynamodb": "^3.1169.0"
+  }
+}

@@ -1,0 +1,55 @@
+service: lab5-api
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  architecture: arm64
+  region: eu-central-1
+  stage: dev
+  memorySize: 512
+  timeout: 10
+  logRetentionInDays: 7
+  environment:
+    TABLE_NAME: ${self:service}-${sls:stage}
+    API_TOKEN: ${env:API_TOKEN}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:Query
+            - dynamodb:TransactWriteItems
+          Resource:
+            - Fn::GetAtt: [AppTable, Arn]
+
+functions:
+  createOrg:
+    handler: src/organizations.create
+    events:
+      - httpApi:
+          method: POST
+          path: /organizations
+
+resources:
+  Resources:
+    AppTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${sls:stage}
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
