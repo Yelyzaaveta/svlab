@@ -13,6 +13,15 @@ provider:
   environment:
     TABLE_NAME: ${self:service}-${sls:stage}
     API_TOKEN: ${env:API_TOKEN}
+  httpApi:
+    authorizers:
+      tokenAuthorizer:
+        type: request
+        functionName: authorizer
+        enableSimpleResponses: true
+        identitySource:
+          - $request.header.Authorization
+        resultTtlInSeconds: 0
   iam:
     role:
       statements:
@@ -22,17 +31,69 @@ provider:
             - dynamodb:GetItem
             - dynamodb:UpdateItem
             - dynamodb:Query
+            - dynamodb:DeleteItem
+            - dynamodb:ConditionCheckItem
             - dynamodb:TransactWriteItems
           Resource:
             - Fn::GetAtt: [AppTable, Arn]
 
 functions:
+  authorizer:
+    handler: src/authorizer.handler
+
   createOrg:
     handler: src/organizations.create
     events:
       - httpApi:
           method: POST
           path: /organizations
+          authorizer:
+            name: tokenAuthorizer
+
+  getOrg:
+    handler: src/organizations.get
+    events:
+      - httpApi:
+          method: GET
+          path: /organizations/{orgId}
+          authorizer:
+            name: tokenAuthorizer
+
+  updateOrg:
+    handler: src/organizations.update
+    events:
+      - httpApi:
+          method: PUT
+          path: /organizations/{orgId}
+          authorizer:
+            name: tokenAuthorizer
+
+  createUser:
+    handler: src/users.create
+    events:
+      - httpApi:
+          method: POST
+          path: /organizations/{orgId}/users
+          authorizer:
+            name: tokenAuthorizer
+
+  updateUser:
+    handler: src/users.update
+    events:
+      - httpApi:
+          method: PUT
+          path: /organizations/{orgId}/users/{userId}
+          authorizer:
+            name: tokenAuthorizer
+
+  deleteUser:
+    handler: src/users.remove
+    events:
+      - httpApi:
+          method: DELETE
+          path: /organizations/{orgId}/users/{userId}
+          authorizer:
+            name: tokenAuthorizer
 
 resources:
   Resources:
@@ -50,6 +111,9 @@ resources:
             KeyType: HASH
           - AttributeName: SK
             KeyType: RANGE
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5

@@ -9,3 +9,9 @@ export function validateUser(input) {
     errors.push('email is not valid');
   return errors;
 }
+
+export function validateVersion(version) {
+  return Number.isInteger(version) && version > 0
+    ? []
+    : ['version is required, positive integer'];
+}
